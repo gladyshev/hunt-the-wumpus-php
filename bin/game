@@ -1,2 +1,19 @@
 #!/usr/bin/env php
 <?php
+
+chdir(__DIR__ . '/..');
+
+/** @var \Psr\Container\ContainerInterface $container */
+$container = require 'bootstrap/container.php';
+
+try {
+    $game = $container->get(\Wumpus\GameRules\GameRules::class);
+    $game->start();
+} catch (\Throwable $e) {
+    fwrite(\STDERR, (string) $e);
+    return 0;
+}
+
+return 0;
+
+
