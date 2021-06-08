@@ -3,9 +3,9 @@
  * @project Hunt the Wumpus
  */
 
-namespace Wumpus\GameRules;
+namespace Htw\IO;
 
-interface UIInterface
+interface IOInterface
 {
     public function print(string $message = '', array $placeholders = []): void;
     public function println(string $message = '', array $placeholders = []): void;

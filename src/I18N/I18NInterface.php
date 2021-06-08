@@ -3,7 +3,7 @@
  * @project Hunt the Wumpus
  */
 
-namespace Wumpus\UI;
+namespace Htw\I18N;
 
 interface I18NInterface
 {

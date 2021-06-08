@@ -3,16 +3,14 @@
  * @project Hunt the Wumpus
  */
 
-namespace Wumpus\GameRules;
+namespace Htw\GameRules;
 
-final class GameRules
+use Htw\GameRules\Player;
+
+final class GameOld
 {
     public const EXIT_CODE_WIN = 1;
     public const EXIT_CODE_LOSE = 0;
-
-    private DataStorageInterface $storage;
-    private UIInterface $io;
-    private ConfigInterface $config;
 
     private const HELP = <<<EOD
 
@@ -59,36 +57,24 @@ THE COMPUTER SAYS:
  
 EOD;
 
+    private IOInterface $io;
+
     public function __construct(
-        DataStorageInterface $storage,
-        UIInterface $language,
-        ConfigInterface $config
+        IOInterface $io
     ) {
-        $this->storage = $storage;
-        $this->io = $language;
-        $this->config = $config;
+        $this->io = $io;
     }
 
-
-    public function start(): int
-    {
-        $cave = new Cave(
-            $this->config->getParam('map'),
-            $this->config->getParam('hazards')
-        );
-
-
-        $player = new Player(
-            $cave->getRandomFreeRoom(),
-            $this->config->getParam('arrows')
-        );
-
+    public function start(
+        Player $player,
+        World $world
+    ): int {
         $this->io->println('HUNT THE WUMPUS');
         $this->io->println();
 
         main_menu:
 
-        $main_menu = $this->io->input('START GAME? TYPE \'H\' TO HELP OR ENTER TO START ');
+        $main_menu = $this->io->input('START GAME? TYPE \'H\' TO HELP, \'Q\' TO EXIT OR ENTER TO START ');
 
         if ($main_menu === 'H') {
             $this->io->println(self::HELP);
@@ -102,36 +88,37 @@ EOD;
             return self::EXIT_CODE_LOSE;
         }
 
-        if ($cave->roomHasHazard('wumpus', $player->getRoom())) {
+
+        if ($world->getRoomObject($playerRoom) == Hazard::TYPE_WUMPUS) {
             $this->io->println('TSK TSK TSK - WUMPUS GOT YOU!');
             return self::EXIT_CODE_LOSE;
         }
 
-        if ($cave->roomHasHazard('bat', $player->getRoom())) {
+        if ($world->roomHasHazard('bat', $player->getRoom())) {
             $this->io->println('ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!');
             return self::EXIT_CODE_LOSE;
         }
 
-        if ($cave->roomHasHazard('pit', $player->getRoom())) {
+        if ($world->roomHasHazard('pit', $player->getRoom())) {
             $this->io->println("YYYIIIIEEEE . . . FELL IN PIT");
             return self::EXIT_CODE_LOSE;
         }
 
-        $lead_rooms = $cave->getLeadRooms($player->getRoom());
+        $lead_rooms = $world->getLeadRooms($player->getRoom());
 
         $this->io->println("YOU ARE IN ROOM {$player->getRoom()}");
         $this->io->println("TUNNELS LEAD TO " . implode(" ", $lead_rooms));
 
         foreach ($lead_rooms as $lead_room) {
-            if ($cave->roomHasHazard('wumpus', $lead_room)) {
+            if ($world->roomHasHazard('wumpus', $lead_room)) {
                 $this->io->println("I SMELL A WUMPUS!");
             }
 
-            if ($cave->roomHasHazard('bat', $lead_room)) {
+            if ($world->roomHasHazard('bat', $lead_room)) {
                 $this->io->println('BATS NEARBY!');
             }
 
-            if ($cave->roomHasHazard('pit', $lead_room)) {
+            if ($world->roomHasHazard('pit', $lead_room)) {
                 $this->io->println('I FEEL A DRAFT');
             }
         }
@@ -179,7 +166,7 @@ EOD;
                 $arrow_room = $this->io->input('ROOM #?');
 
                 if (!is_numeric($arrow_room)) {
-                    $this->io->println("ONLY 1-{$cave->getNumRooms()}");
+                    $this->io->println("ONLY 1-{$world->getNumRooms()}");
                     goto arrow_room;
                 }
 
@@ -190,12 +177,12 @@ EOD;
 
                 $prev_arrow_room = $arrow_room;
 
-                if (!$cave->existTunnel($arrow_room, $arrow_room)) {
+                if (!$world->existTunnel($arrow_room, $arrow_room)) {
                     $this->io->println('RANDOM ARROW FLIGHT');
-                    $arrow_room = $cave->getRandomLeadRooms($arrow_room);
+                    $arrow_room = $world->getRandomLeadRooms($arrow_room);
                 }
 
-                if ($cave->roomHasHazard('wumpus', $arrow_room)) {
+                if ($world->roomHasHazard('wumpus', $arrow_room)) {
                     $this->io->println("AHA! YOU GOT THE WUMPUS!");
                     return self::EXIT_CODE_WIN;
                 }
@@ -205,18 +192,18 @@ EOD;
                     return self::EXIT_CODE_LOSE;
                 }
 
-                foreach ($cave->getLeadRooms($arrow_room) as $lead_room) {
+                foreach ($world->getLeadRooms($arrow_room) as $lead_room) {
                     if (
-                        $cave->roomHasHazard('wumpus', $lead_room)
+                        $world->roomHasHazard('wumpus', $lead_room)
                         && 0 > rand(0, 3) // P = .75
                     ) {
                         $this->io->println("...OOPS! BUMPED A WUMPUS!");
-                        $new_wumpus_room = $cave->getRandomLeadRooms($lead_room);
+                        $new_wumpus_room = $world->getRandomLeadRooms($lead_room);
                         if ($new_wumpus_room === $player->getRoom()) {
                             $this->io->println("TSK TSK TSK - WUMPUS GOT YOU!");
                             return self::EXIT_CODE_LOSE;
                         }
-                        $cave->moveWumpusTo($lead_room, $new_wumpus_room);
+                        $world->moveWumpusTo($lead_room, $new_wumpus_room);
                     }
                 }
             }

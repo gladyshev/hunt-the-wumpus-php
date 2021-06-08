@@ -3,20 +3,21 @@
  * @project Hunt the Wumpus
  */
 
-namespace Wumpus\UI;
+namespace Htw\IO;
 
-use Wumpus\GameRules\TextDeliveryInterface;
+use Htw\I18N\I18NInterface;
+use Htw\TextDelivery\TextDeliveryInterface;
 
-final class UI implements \Wumpus\GameRules\UIInterface
+final class IO implements \Htw\IO\IOInterface
 {
-    private TextDeliveryInterface $text_delivery;
+    private TextDeliveryInterface $textDelivery;
     private I18NInterface $translator;
 
     public function __construct(
         TextDeliveryInterface $text_delivery,
         I18NInterface $translator
     ) {
-        $this->text_delivery = $text_delivery;
+        $this->textDelivery = $text_delivery;
         $this->translator = $translator;
     }
 
@@ -24,23 +25,23 @@ final class UI implements \Wumpus\GameRules\UIInterface
     {
         // ToDo: translate
 
-        $this->text_delivery->output(
+        $this->textDelivery->output(
             $this->compileMessage($message, $placeholders)
         );
     }
 
     public function println(string $message = '', array $placeholders = []): void
     {
-        $this->text_delivery->output($this->compileMessage($message, $placeholders) . PHP_EOL);
+        $this->textDelivery->output($this->compileMessage($message, $placeholders) . PHP_EOL);
     }
 
     public function input(string $prompt = '', string $default = '', array $placeholders = []): string
     {
         $prompt = $this->compileMessage($prompt, $placeholders);
 
-        $this->text_delivery->output($prompt);
+        $this->textDelivery->output($prompt);
 
-        $value = $this->text_delivery->input();
+        $value = $this->textDelivery->input();
 
         return $this->translator->findId($value);
     }
@@ -50,8 +51,8 @@ final class UI implements \Wumpus\GameRules\UIInterface
         $message = $this->translator->translate($message);
 
         foreach ($placeholders as $placeholder => $value) {
-            $value = $this->translate($value);
-            $message = str_replace($placeholder, $value, $message);
+
+            $message = str_replace('{' . $placeholder . '}', $value, $message);
         }
 
         return $message;

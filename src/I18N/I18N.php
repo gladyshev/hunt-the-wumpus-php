@@ -3,9 +3,9 @@
  * @project Hunt the Wumpus
  */
 
-namespace Wumpus\UI;
+namespace Htw\I18N;
 
-final class I18N implements \Wumpus\UI\I18NInterface
+final class I18N implements \Htw\I18N\I18NInterface
 {
     private array $data;
 

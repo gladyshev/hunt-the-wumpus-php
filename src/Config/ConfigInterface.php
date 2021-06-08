@@ -3,7 +3,7 @@
  * @project Hunt the Wumpus
  */
 
-namespace Wumpus\GameRules;
+namespace Htw\Config;
 
 interface ConfigInterface
 {

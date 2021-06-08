@@ -1,6 +1,6 @@
 <?php
 
-namespace Wumpus\GameRules;
+namespace Htw\TextDelivery;
 
 interface TextDeliveryInterface
 {

@@ -3,9 +3,9 @@
  * @project Hunt the Wumpus
  */
 
-namespace Wumpus\Config;
+namespace Htw\Config;
 
-final class FileConfig implements \Wumpus\GameRules\ConfigInterface
+final class FileConfig implements \Htw\Config\ConfigInterface
 {
     private array $params;
 

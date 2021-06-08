@@ -1,0 +1,149 @@
+<?php
+
+namespace Htw\GameRules;
+
+final class World
+{
+    private array $map;
+    private array $worldObjectsMap;
+
+    public function __construct(
+        array $map,
+        array $worldObjectsMap
+    ) {
+        $this->map = $map;
+        $this->worldObjectsMap = $worldObjectsMap;
+    }
+
+    public static function create(
+        array $map,
+        array $worldObjects
+    ): self {
+        $worldObjectPlacement = [];
+
+        $freeRooms = array_keys($map);
+
+        foreach ($worldObjects as $entity) {
+            if (empty($freeRooms)) {
+                throw new \RuntimeException('TOO MANY OBJECTS');
+            }
+
+            $random_room = array_rand($freeRooms);
+
+            unset($freeRooms[$random_room]);
+
+            $worldObjectPlacement[$random_room] = $entity;
+        }
+
+        return new World($map, $worldObjectPlacement);
+    }
+
+    public function addWorldObject(
+        int $room,
+        WorldObjectInterface $object
+    ) {
+        if (!isset($this->map[$room])) {
+            throw new \RuntimeException('INVALID ROOM');
+        }
+
+        if (isset($this->worldObjectsMap[$room])) {
+            throw new \RuntimeException('ROOM IS NOT EMPTY');
+        }
+
+        $this->worldObjectsMap[$room] = $object;
+    }
+
+    public function roomHasHazard(string $hazardType, int $room): bool
+    {
+        return
+            isset($this->worldObjectsMap[$room])
+            && $this->worldObjectsMap[$room]->getType() === $hazardType;
+    }
+
+    public function getRandomFreeRoom(): int
+    {
+        $free_rooms = array_diff(
+            array_keys($this->map),
+            array_keys($this->worldObjectsMap)
+        );
+
+        return $free_rooms[array_rand($free_rooms)];
+    }
+
+    public function getLeadRooms(int $room): array
+    {
+        return $this->map[$room];
+    }
+
+    public function getRandomLeadRooms(int $room): int
+    {
+        $lead_rooms = $this->getLeadRooms($room);
+
+        return $lead_rooms[
+            array_rand($lead_rooms)
+        ];
+    }
+
+    public function getNumRooms(): int
+    {
+        return max(array_keys($this->map));
+    }
+
+    public function existRoom(int $room): bool
+    {
+        return isset($this->map[$room]);
+    }
+
+    public function existTunnel(int $room1, int $room2): bool
+    {
+        return in_array($room2, $this->map[$room1]);
+    }
+
+    public function moveRoomObject(int $fromRoom, int $toRoom): void
+    {
+        $this->worldObjectsMap[$toRoom] = $this->worldObjectsMap[$fromRoom];
+        unset($this->worldObjectsMap[$fromRoom]);
+    }
+
+    public function diePlayer(int $playerId): void
+    {
+        $this->getPlayer($playerId)->die();
+    }
+
+    public function isPlayerGameOver(int $playerId): bool
+    {
+        return $this->getPlayer($playerId)->isGameOver();
+    }
+
+    public function getPlayer(int $playerId): Player
+    {
+        $playerRoom = $this->getPlayerRoom($playerId);
+
+        $player = $this->getRoomObject($playerRoom);
+
+        if ($player instanceof Player) {
+            return $player;
+        }
+
+        throw new \RuntimeException('PLAYER NOT FOUND');
+    }
+
+    public function getRoomObject(int $room): ?WorldObjectInterface
+    {
+        return $this->worldObjectsMap[$room] ?? null;
+    }
+
+    public function getPlayerRoom(int $playerId): int
+    {
+        foreach ($this->worldObjectsMap as $room => $object) {
+            if (
+                $object instanceof Player
+                && $object->getId() === $playerId
+            ) {
+                return $room;
+            }
+        }
+
+        throw new \RuntimeException('PLAYER NOT FOUND');
+    }
+}

@@ -3,14 +3,14 @@
  * @project Hunt the Wumpus
  */
 
-namespace Wumpus\TextDelivery;
+namespace Htw\TextDelivery;
 
 /**
  * Class AnsiTextTextIO
  *
  * @author Dmitry Gladyshev <gladyshevd@icloud.com>
  */
-class AnsiConsoleDelivery implements \Wumpus\GameRules\TextDeliveryInterface
+class AnsiConsoleDelivery implements TextDeliveryInterface
 {
     public function output(string $message = ''): void
     {

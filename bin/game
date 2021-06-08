@@ -7,7 +7,7 @@ chdir(__DIR__ . '/..');
 $container = require 'bootstrap/container.php';
 
 try {
-    $game = $container->get(\Wumpus\GameRules\GameRules::class);
+    $game = $container->get(\Htw\Cli\Main::class);
     $game->start();
 } catch (\Throwable $e) {
     fwrite(\STDERR, (string) $e);

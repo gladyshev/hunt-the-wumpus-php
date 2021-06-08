@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'bat',
-    'bat',
-    'pit',
-    'pit',
-    'wumpus'
+    'BAT',
+    'BAT',
+    'PIT',
+    'PIT',
+    'WUMPUS'
 ];
