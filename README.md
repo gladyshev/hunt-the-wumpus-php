@@ -9,6 +9,7 @@ To run console version you need download code from git and run `bin/game`.
 $ cd ~/games
 $ git clone https://github.com/gladyshev/hunt-the-wumpus-php.git htw
 $ cd htw 
+$ composer install
 $ ./bin/game
 ```
 
