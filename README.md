@@ -1,4 +1,8 @@
-# Hunt the Wumpus
+<p align="center">
+    <img src="https://upload.wikimedia.org/wikipedia/ru/1/18/Wumpus2.png">
+    <h1 align="center">Hunt the Wumpus</h1>
+    <br>
+</p>
 
 Another yet implementation a classic text-based adventure game "[Hunt the Wumpus](https://en.wikipedia.org/wiki/Hunt_the_Wumpus)" developed by Gregory Yob back in 1973.
 
