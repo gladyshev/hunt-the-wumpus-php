@@ -6,8 +6,6 @@
 
 Another yet implementation a classic text-based adventure game "[Hunt the Wumpus](https://en.wikipedia.org/wiki/Hunt_the_Wumpus)" developed by Gregory Yob back in 1973.
 
-<img style="allign: center;" src="https://upload.wikimedia.org/wikipedia/ru/1/18/Wumpus2.png">
-
 # How to Run
 
 To run console version you need download code from git and run `bin/game`.
