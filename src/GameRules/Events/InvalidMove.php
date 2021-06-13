@@ -7,7 +7,7 @@ namespace Htw\GameRules\Events;
 
 use Htw\GameRules\GameEventInterface;
 
-final class InvalidRoom implements GameEventInterface
+final class InvalidMove implements GameEventInterface
 {
     private int $room;
     private int $playerId;

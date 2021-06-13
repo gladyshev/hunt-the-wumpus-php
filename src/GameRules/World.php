@@ -2,6 +2,8 @@
 
 namespace Htw\GameRules;
 
+use Htw\GameRules\WorldObjects\Player;
+
 final class World
 {
     private array $map;
@@ -28,9 +30,10 @@ final class World
                 throw new \RuntimeException('TOO MANY OBJECTS');
             }
 
-            $random_room = array_rand($freeRooms);
+            $random_room_key = array_rand($freeRooms);
+            $random_room = $freeRooms[$random_room_key];
 
-            unset($freeRooms[$random_room]);
+            unset($freeRooms[$random_room_key]);
 
             $worldObjectPlacement[$random_room] = $entity;
         }
@@ -75,7 +78,7 @@ final class World
         return $this->map[$room];
     }
 
-    public function getRandomLeadRooms(int $room): int
+    public function getRandomLeadRoom(int $room): int
     {
         $lead_rooms = $this->getLeadRooms($room);
 
@@ -105,14 +108,9 @@ final class World
         unset($this->worldObjectsMap[$fromRoom]);
     }
 
-    public function diePlayer(int $playerId): void
+    public function cleanRoom(int $room): void
     {
-        $this->getPlayer($playerId)->die();
-    }
-
-    public function isPlayerGameOver(int $playerId): bool
-    {
-        return $this->getPlayer($playerId)->isGameOver();
+        unset($this->worldObjectsMap[$room]);
     }
 
     public function getPlayer(int $playerId): Player

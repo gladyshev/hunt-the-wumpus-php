@@ -3,14 +3,18 @@
  * @project Hunt the Wumpus
  */
 
-namespace Htw\GameRules;
+namespace Htw\GameRules\WorldObjects;
 
-final class Player implements WorldObjectInterface
+use Htw\GameRules\DieableWorldObjectInterface;
+use Htw\GameRules\WorldObjectInterface;
+
+final class Player implements WorldObjectInterface, DieableWorldObjectInterface
 {
     private int $arrows;
     private string $name;
     private string $id;
     private bool $isDead = false;
+    private bool $isGotWumpus = false;
 
     public function __construct(
         int $arrows,
@@ -39,9 +43,14 @@ final class Player implements WorldObjectInterface
         $this->isDead = true;
     }
 
+    public function gotWumpus(): void
+    {
+        $this->isGotWumpus = true;
+    }
+
     public function getType(): string
     {
-        return 'PLAYER';
+        return self::TYPE_PLAYER;
     }
 
     public function getId(): int
@@ -59,10 +68,17 @@ final class Player implements WorldObjectInterface
         return $this->isDead;
     }
 
+    public function isGotWumpus(): bool
+    {
+        return $this->isGotWumpus;
+    }
+
     public function isGameOver(): bool
     {
         return
             $this->isDead()
-            || !$this->hasArrow();
+            || !$this->hasArrow()
+            || $this->isGotWumpus()
+        ;
     }
 }

@@ -5,23 +5,38 @@
 
 namespace Htw\Cli;
 
+use Htw\GameRules\Events\ArrowHit;
+use Htw\GameRules\Events\ArrowMissed;
+use Htw\GameRules\Events\ArrowRandomFlight;
 use Htw\GameRules\Events\FellInPit;
-use Htw\GameRules\Events\InvalidRoom;
+use Htw\GameRules\Events\InvalidMove;
 use Htw\GameRules\Events\LeadRoomHazard;
 use Htw\GameRules\Events\OutOfArrows;
 use Htw\GameRules\Events\SuperBatSnatch;
 use Htw\GameRules\Events\WumpusGotYou;
+use Htw\GameRules\Events\WumpusWakedUp;
 use Htw\GameRules\Events\YouAreInRoom;
 use Htw\GameRules\World;
+use Htw\GameRules\WorldObjectFactory;
+use Htw\GameRules\WorldObjectInterface;
 use Htw\IO\IOInterface;
-use Htw\GameRules\Hazard;
-use Htw\GameRules\Player;
+use Htw\GameRules\WorldObjects\Pit;
+use Htw\GameRules\WorldObjects\Player;
 use Htw\Config\ConfigInterface;
 use Htw\GameRules\Game;
 
 final class Main
 {
-    private const HELP =<<<EOD
+    private const STARTTEXT = <<<EOD
+     ATTENTION ALL WUMPUS LOVERS!!!
+     THERE ARE NOW TWO ADDITIONS TO THE WUMPUS FAMILY
+     OF PROGRAMS.
+
+      WUMP2:  SOME DIFFERENT CAVE ARRANGEMENTS
+      WUMP3:  DIFFERENT HAZARDS
+EOD;
+
+    private const INSTRUCTIONS = <<<EOD
 
 WELCOME TO 'HUNT THE WUMPUS'
 
@@ -68,26 +83,33 @@ EOD;
 
     private ConfigInterface $config;
     private IOInterface $io;
+    private WorldObjectFactory $worldObjectFactory;
 
     public function __construct(
         IOInterface $io,
-        ConfigInterface $config
+        ConfigInterface $config,
+        WorldObjectFactory $worldObjectFactory
     ) {
         $this->io = $io;
         $this->config = $config;
+        $this->worldObjectFactory = $worldObjectFactory;
     }
 
+    /**
+     * @param int $playerId
+     * @throws \ReflectionException
+     */
     public function start(int $playerId = 1): void
     {
-        $this->io->println('HUNT THE WUMPUS');
+        $this->io->println(self::STARTTEXT);
         $this->io->println();
 
         main_menu:
 
-        $command = strtoupper(trim($this->io->input("ENTER TO START NEW GAME, 'H' TO HELP, 'Q' TO QUIT ")));
+        $command = strtoupper(trim($this->io->input("ENTER TO START NEW GAME, 'I' TO INSTRUCTIONS, 'Q' TO QUIT ")));
 
-        if ($command === 'H') {
-            $this->io->println(self::HELP);
+        if ($command === 'I') {
+            $this->io->println(self::INSTRUCTIONS);
         }
 
         if ($command === 'Q') {
@@ -113,32 +135,35 @@ EOD;
         $worldObjects[] = $player;
 
         foreach ($this->config->getParam('hazards') as $hazardType) {
-            $worldObjects[] = Hazard::fromType($hazardType);
+            $worldObjects[] = $this->worldObjectFactory->createByType(
+                $hazardType,
+                rand(100, getrandmax())
+            );
         }
 
-        $theGame = new Game(
-            World::create($map, $worldObjects)
-        );
+        $world = World::create($map, $worldObjects);
 
-        $theGame->addEventListener(function (InvalidRoom $event) {
+        $theGame = new Game($world);
+
+        $theGame->addEventListener(function (InvalidMove $event): void {
             $this->io->println('INVALID ROOM');
         });
 
-        $theGame->addEventListener(function (LeadRoomHazard $event) {
-            if ($event->getHazard()->getType() === Hazard::TYPE_PIT) {
+        $theGame->addEventListener(function (LeadRoomHazard $event): void {
+            if ($event->getHazard()->getType() === Pit::TYPE_PIT) {
                 $this->io->println('I FEEL A DRAFT');
             }
 
-            if ($event->getHazard()->getType() === Hazard::TYPE_BAT) {
+            if ($event->getHazard()->getType() === Pit::TYPE_BAT) {
                 $this->io->println('BATS NEARBY!');
             }
 
-            if ($event->getHazard()->getType() === Hazard::TYPE_WUMPUS) {
+            if ($event->getHazard()->getType() === Pit::TYPE_WUMPUS) {
                 $this->io->println('I SMELL A WUMPUS!');
             }
         });
 
-        $theGame->addEventListener(function (YouAreInRoom $event) {
+        $theGame->addEventListener(function (YouAreInRoom $event): void {
             $this->io->println("YOU ARE IN ROOM {room}", [
                 'room' => $event->getRoom()
             ]);
@@ -150,43 +175,109 @@ EOD;
             ]);
         });
 
-        $theGame->addEventListener(function (SuperBatSnatch $event) {
+        $theGame->addEventListener(function (SuperBatSnatch $event): void {
             $this->io->println('ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!');
         });
 
-        $theGame->addEventListener(function (WumpusGotYou $event) {
+        $theGame->addEventListener(function (WumpusGotYou $event): void {
             $this->io->println("TSK TSK TSK- WUMPUS GOT YOU!");
         });
         
-        $theGame->addEventListener(function (OutOfArrows $event) {
-            $this->io->println("OUT OF ARROWS.\nHA HA HA - YOU LOSE!");
+        $theGame->addEventListener(function (OutOfArrows $event): void {
+            $this->io->println("OUT OF ARROWS.");
         });
 
-        $theGame->addEventListener(function (FellInPit $event) {
+        $theGame->addEventListener(function (FellInPit $event): void {
             $this->io->println("YYYIIIIEEEE . . . FELL IN PIT");
+        });
+
+        $theGame->addEventListener(function (ArrowHit $arrowHit): void {
+            $type = $arrowHit->getWorldObject()->getType();
+            switch ($type) {
+                case WorldObjectInterface::TYPE_WUMPUS:
+                    $this->io->println('AHA! YOU GOT THE WUMPUS!');
+                    break;
+
+                case WorldObjectInterface::TYPE_PLAYER:
+                    $this->io->println('OUCH! ARROW GOT YOU!');
+            }
+        });
+
+        $theGame->addEventListener(function (WumpusWakedUp $event): void {
+            $this->io->println('...OOPS! BUMPED A WUMPUS!');
+        });
+
+        $theGame->addEventListener(function (ArrowRandomFlight $event): void {
+            $this->io->println('NO TUNNEL FOR ARROW. ARROW FLEW GOD KNOWS WHERE!');
+        });
+
+        $theGame->addEventListener(function (ArrowMissed $event): void {
+            $this->io->println('MISSED');
         });
 
         /* Main loop */
 
-        while (!$player->isGameOver()) {
-            $this->io->println();
-            $theGame->sensePlayerRoom($playerId);
+        sense_room:
 
-            /* Executing commands */
+        $theGame->sensePlayerRoom($playerId);
 
-            $command = strtoupper(trim($this->io->input('SHOOT OR MOVE (S-M)')));
+        shoot_or_move:
 
-            switch ($command) {
-                case 'M':
-                    $whereTo = $this->io->input('WHERE TO?');
+        $command = strtoupper(trim($this->io->input('SHOOT OR MOVE (S-M)')));
 
-                    $theGame->move($playerId, $whereTo);
-                    break;
+        if ($command === 'M') {
+            $whereTo = $this->io->input('WHERE TO?');
+            $theGame->move($playerId, $whereTo);
+        }
+
+        if ($command === 'S') {
+            arrow_energy:
+            $arrowEnergy = $this->io->input('NO. OF ROOMS (1-{max_arrow_energy})', '', [
+                'max_arrow_energy' => $this->config->getParam('arrow_max_energy')
+            ]);
+
+            if (
+                $arrowEnergy < 1
+                || $arrowEnergy > $this->config->getParam('arrow_max_energy')
+            ) {
+                goto arrow_energy;
+            }
+
+            $arrowTrajectory = [];
+            for ($i = 0; $i < $arrowEnergy; $i++) {
+                arrow_trajectory:
+                $room = $this->io->input('ROOM #');
+                if (
+                    $i > 1
+                    && $room == $arrowTrajectory[$i - 2]
+                ) {
+                    $this->io->println('ARROWS AREN\'T THAT CROOKED - TRY ANOTHER ROOM');
+                    goto arrow_trajectory;
+                }
+
+                if (!$world->existRoom($room)) {
+                    $this->io->println('ONLY 1-{max_rooms}', ['max_rooms' => $world->getNumRooms()]);
+                    goto arrow_trajectory;
+                }
+                $arrowTrajectory[] = $room;
+            }
+
+            $theGame->shoot($playerId, $arrowTrajectory);
+
+            if (!$player->isGameOver()) {
+                goto shoot_or_move;
             }
         }
 
+        if (!$player->isGameOver()) {
+            goto sense_room;
+        }
 
-        $this->io->println('GAME OVER.');
+        if ($player->isGotWumpus()) {
+            $this->io->println('HEE HEE HEE - THE WUMPUS\'LL GETCHA NEXT TIME!!');
+        } else {
+            $this->io->println('HA HA HA - YOU LOSE!');
+        }
 
         goto main_menu;
     }

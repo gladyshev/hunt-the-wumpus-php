@@ -7,4 +7,5 @@ namespace Htw\GameRules;
 
 interface GameEventInterface
 {
+    public function getPlayerId(): int;
 }

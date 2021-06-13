@@ -9,20 +9,12 @@ use Htw\GameRules\GameEventInterface;
 use Htw\GameRules\WorldObjects\Pit;
 use Htw\GameRules\WorldObjectInterface;
 
-final class LeadRoomHazard implements GameEventInterface
+final class ArrowMissed implements GameEventInterface
 {
-    private WorldObjectInterface $hazard;
     private int $playerId;
 
-    public function __construct(int $playerId, WorldObjectInterface $hazard)
-    {
-        $this->hazard = $hazard;
+    public function __construct(int $playerId) {
         $this->playerId = $playerId;
-    }
-
-    public function getHazard(): WorldObjectInterface
-    {
-        return $this->hazard;
     }
 
     public function getPlayerId(): int
