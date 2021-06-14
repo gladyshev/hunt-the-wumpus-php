@@ -27,13 +27,19 @@ use Htw\GameRules\Game;
 
 final class Main
 {
-    private const STARTTEXT = <<<EOD
-     ATTENTION ALL WUMPUS LOVERS!!!
-     THERE ARE NOW TWO ADDITIONS TO THE WUMPUS FAMILY
-     OF PROGRAMS.
+    private const WELCOME = <<<EOD
+HUNT THE WUMPUS
+EOD;
 
-      WUMP2:  SOME DIFFERENT CAVE ARRANGEMENTS
-      WUMP3:  DIFFERENT HAZARDS
+    private const DISCLAIMER = <<<EOD
+
+ATTENTION ALL WUMPUS LOVERS!!!
+THERE ARE NOW TWO ADDITIONS TO THE WUMPUS FAMILY
+OF PROGRAMS.
+
+    WUMP2:  SOME DIFFERENT CAVE ARRANGEMENTS
+    WUMP3:  DIFFERENT HAZARDS
+
 EOD;
 
     private const INSTRUCTIONS = <<<EOD
@@ -99,10 +105,10 @@ EOD;
      * @param int $playerId
      * @throws \ReflectionException
      */
-    public function start(int $playerId = 1): void
+    public function start(int $playerId = 1, string $playerName = 'player1'): void
     {
-        $this->io->println(self::STARTTEXT);
-        $this->io->println();
+        $this->io->println(self::WELCOME);
+        $this->io->println(self::DISCLAIMER);
 
         main_menu:
 
@@ -117,7 +123,8 @@ EOD;
             return;
         }
 
-        $playerName = $this->io->input('WHAT IS YOUR NAME? ');
+        $this->io->println('HUNT THE WUMPUS');
+        $this->io->println();
 
 
         $map = $this->config->getParam('map');
@@ -222,6 +229,8 @@ EOD;
         $theGame->sensePlayerRoom($playerId);
 
         shoot_or_move:
+
+        $this->io->println();
 
         $command = strtoupper(trim($this->io->input('SHOOT OR MOVE (S-M)')));
 

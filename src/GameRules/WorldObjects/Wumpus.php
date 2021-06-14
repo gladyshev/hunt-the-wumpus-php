@@ -5,10 +5,14 @@
 
 namespace Htw\GameRules\WorldObjects;
 
-use Htw\GameRules\DieableWorldObjectInterface;
+use Htw\GameRules\ArrowHittableWorldObjectInterface;
+use Htw\GameRules\CanDieWorldObjectInterface;
 use Htw\GameRules\WorldObjectInterface;
 
-final class Wumpus implements WorldObjectInterface, DieableWorldObjectInterface
+final class Wumpus implements
+    WorldObjectInterface,
+    ArrowHittableWorldObjectInterface,
+    CanDieWorldObjectInterface
 {
     private int $id;
     private bool $isDead;
@@ -19,6 +23,16 @@ final class Wumpus implements WorldObjectInterface, DieableWorldObjectInterface
     ) {
         $this->id = $id;
         $this->isDead = $isDead;
+    }
+
+    public function hit(): void
+    {
+        $this->die();
+    }
+
+    public function willHit(): bool
+    {
+        return $this->isDead();
     }
 
     public function die(): void

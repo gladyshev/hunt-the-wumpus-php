@@ -56,11 +56,11 @@ final class World
         $this->worldObjectsMap[$room] = $object;
     }
 
-    public function roomHasHazard(string $hazardType, int $room): bool
+    public function roomHasObject(string $worldObjectType, int $room): bool
     {
         return
             isset($this->worldObjectsMap[$room])
-            && $this->worldObjectsMap[$room]->getType() === $hazardType;
+            && $this->worldObjectsMap[$room]->getType() === $worldObjectType;
     }
 
     public function getRandomFreeRoom(): int

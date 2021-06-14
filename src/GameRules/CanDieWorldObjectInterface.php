@@ -5,7 +5,7 @@
 
 namespace Htw\GameRules;
 
-interface DieableWorldObjectInterface
+interface CanDieWorldObjectInterface
 {
     public function isDead(): bool;
     public function die(): void;

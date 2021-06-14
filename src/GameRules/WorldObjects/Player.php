@@ -5,10 +5,14 @@
 
 namespace Htw\GameRules\WorldObjects;
 
-use Htw\GameRules\DieableWorldObjectInterface;
+use Htw\GameRules\ArrowHittableWorldObjectInterface;
+use Htw\GameRules\CanDieWorldObjectInterface;
 use Htw\GameRules\WorldObjectInterface;
 
-final class Player implements WorldObjectInterface, DieableWorldObjectInterface
+final class Player implements
+    WorldObjectInterface,
+    ArrowHittableWorldObjectInterface,
+    CanDieWorldObjectInterface
 {
     private int $arrows;
     private string $name;
@@ -38,24 +42,10 @@ final class Player implements WorldObjectInterface, DieableWorldObjectInterface
         return $this->hasArrow();
     }
 
-    public function die(): void
-    {
-        $this->isDead = true;
-    }
 
     public function gotWumpus(): void
     {
         $this->isGotWumpus = true;
-    }
-
-    public function getType(): string
-    {
-        return self::TYPE_PLAYER;
-    }
-
-    public function getId(): int
-    {
-        return $this->id;
     }
 
     public function getName(): string
@@ -63,10 +53,7 @@ final class Player implements WorldObjectInterface, DieableWorldObjectInterface
         return $this->name;
     }
 
-    public function isDead(): bool
-    {
-        return $this->isDead;
-    }
+
 
     public function isGotWumpus(): bool
     {
@@ -80,5 +67,41 @@ final class Player implements WorldObjectInterface, DieableWorldObjectInterface
             || !$this->hasArrow()
             || $this->isGotWumpus()
         ;
+    }
+
+    /* World Object */
+
+    public function getType(): string
+    {
+        return self::TYPE_PLAYER;
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /* Arrow Hittable */
+
+    public function willHit(): bool
+    {
+        return $this->isDead();
+    }
+
+    public function hit(): void
+    {
+        $this->die();
+    }
+
+    /* Can Die */
+
+    public function die(): void
+    {
+        $this->isDead = true;
+    }
+
+    public function isDead(): bool
+    {
+        return $this->isDead;
     }
 }

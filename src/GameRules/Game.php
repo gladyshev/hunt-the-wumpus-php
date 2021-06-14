@@ -16,7 +16,9 @@ use Htw\GameRules\Events\SuperBatSnatch;
 use Htw\GameRules\Events\WumpusGotYou;
 use Htw\GameRules\Events\WumpusWakedUp;
 use Htw\GameRules\Events\YouAreInRoom;
+use Htw\GameRules\WorldObjects\Bat;
 use Htw\GameRules\WorldObjects\Pit;
+use Htw\GameRules\WorldObjects\Wumpus;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 
@@ -56,6 +58,8 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
             return;
         }
 
+        check_room:
+
         $roomHazard = $this->world->getRoomObject($whereTo);
 
         if (empty($roomHazard)) {
@@ -63,22 +67,22 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
             return;
         }
 
-        switch ($roomHazard->getType()) {
-            case Pit::TYPE_WUMPUS:
-                $this->world->getPlayer($playerId)->die();
-                $this->dispatch(new WumpusGotYou($playerId));
-                break;
+        if ($roomHazard instanceof Wumpus) {
+            $this->world->getPlayer($playerId)->die();
+            $this->dispatch(new WumpusGotYou($playerId));
+        }
 
-            case Pit::TYPE_PIT:
-                $this->world->getPlayer($playerId)->die();
-                $this->dispatch(new FellInPit($playerId));
-                break;
+        if ($roomHazard instanceof Pit) {
+            $this->world->getPlayer($playerId)->die();
+            $this->dispatch(new FellInPit($playerId));
+        }
 
-            case Pit::TYPE_BAT:
-                $newPlayerRoom = $this->world->getRandomFreeRoom();
-                $this->world->moveRoomObject($playerRoom, $newPlayerRoom);
-                $this->dispatch(new SuperBatSnatch($playerId, $playerRoom, $newPlayerRoom));
-                break;
+        if ($roomHazard instanceof Bat) {
+            $whereTo = $this->world->getRandomFreeRoom();
+            $this->world->moveRoomObject($playerRoom, $whereTo);
+            $this->dispatch(new SuperBatSnatch($playerId, $playerRoom, $whereTo));
+
+            goto check_room;
         }
     }
 
@@ -117,18 +121,18 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
 
         /* Arrow flight */
 
-        $newWumpusRoom = null;
+        $wakedUpWumpusRooms = [];
 
-        foreach ($actualArrowFlight as $arrowRoom)
-        {
+        foreach ($actualArrowFlight as $arrowRoom) {
             $roomObject = $this->world->getRoomObject($arrowRoom);
 
             foreach ($this->world->getLeadRooms($arrowRoom) as $arrowLeadRoom) {
                 if (
-                    $this->world->roomHasHazard(WorldObjectInterface::TYPE_WUMPUS, $arrowLeadRoom)
-                    && true // TODO: 75%
+                    empty($newWumpusRoom)
+                    && $this->world->roomHasObject(WorldObjectInterface::TYPE_WUMPUS, $arrowLeadRoom)
+                    && rand(1, 100) <= 75 // P = 0.75
                 ) {
-                    $newWumpusRoom = $arrowLeadRoom;
+                    $wakedUpWumpusRooms[] = $arrowLeadRoom;
                 }
             }
 
@@ -136,8 +140,8 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
                 continue;
             }
 
-            if ($roomObject instanceof DieableWorldObjectInterface) {
-                $roomObject->die();
+            if ($roomObject instanceof ArrowHittableWorldObjectInterface) {
+                $roomObject->hit();
                 $this->dispatch(new ArrowHit($playerId, $roomObject));
                 if ($roomObject->getType() === WorldObjectInterface::TYPE_WUMPUS) {
                     $player->gotWumpus();
@@ -154,13 +158,15 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
 
         $this->dispatch(new ArrowMissed($playerId));
 
-        if ($newWumpusRoom) {
+        foreach ($wakedUpWumpusRooms as $wakedUpRoom) {
             $this->world->moveRoomObject(
-                $newWumpusRoom,
-                $this->world->getRandomLeadRoom($newWumpusRoom)
+                $wakedUpRoom,
+                $this->world->getRandomLeadRoom($wakedUpRoom)
             );
+
             $this->dispatch(new WumpusWakedUp($playerId));
-            if ($playerRoom === $newWumpusRoom) {
+
+            if ($playerRoom === $wakedUpRoom) {
                 $this->world->getPlayer($playerId)->die();
                 $this->dispatch(new WumpusGotYou($playerId));
             }
