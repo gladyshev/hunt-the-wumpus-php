@@ -16,8 +16,8 @@ use Htw\GameRules\Events\SuperBatSnatch;
 use Htw\GameRules\Events\WumpusGotYou;
 use Htw\GameRules\Events\WumpusWakedUp;
 use Htw\GameRules\Events\YouAreInRoom;
-use Htw\GameRules\World;
-use Htw\GameRules\WorldObjectFactory;
+use Htw\GameRules\WorldFactory;
+use Htw\GameRules\HazardFactory;
 use Htw\GameRules\WorldObjectInterface;
 use Htw\IO\IOInterface;
 use Htw\GameRules\WorldObjects\Pit;
@@ -89,24 +89,30 @@ EOD;
 
     private ConfigInterface $config;
     private IOInterface $io;
-    private WorldObjectFactory $worldObjectFactory;
+    private HazardFactory $worldObjectFactory;
+    private WorldFactory $worldFactory;
 
     public function __construct(
         IOInterface $io,
         ConfigInterface $config,
-        WorldObjectFactory $worldObjectFactory
+        HazardFactory $worldObjectFactory,
+        WorldFactory $worldFactory
     ) {
         $this->io = $io;
         $this->config = $config;
         $this->worldObjectFactory = $worldObjectFactory;
+        $this->worldFactory = $worldFactory;
     }
 
     /**
      * @param int $playerId
+     * @param string $playerName
      * @throws \ReflectionException
      */
-    public function start(int $playerId = 1, string $playerName = 'player1'): void
-    {
+    public function start(
+        int $playerId = 1,
+        string $playerName = 'player1'
+    ): void {
         $this->io->println(self::WELCOME);
         $this->io->println(self::DISCLAIMER);
 
@@ -143,20 +149,19 @@ EOD;
 
         foreach ($this->config->getParam('hazards') as $hazardType) {
             $worldObjects[] = $this->worldObjectFactory->createByType(
-                $hazardType,
-                rand(100, getrandmax())
+                $hazardType
             );
         }
 
-        $world = World::create($map, $worldObjects);
+        $world = $this->worldFactory->create($map, $worldObjects);
 
-        $theGame = new Game($world);
+        $game = new Game($world);
 
-        $theGame->addEventListener(function (InvalidMove $event): void {
+        $game->addEventListener(function (InvalidMove $event): void {
             $this->io->println('INVALID ROOM');
         });
 
-        $theGame->addEventListener(function (LeadRoomHazard $event): void {
+        $game->addEventListener(function (LeadRoomHazard $event): void {
             if ($event->getHazard()->getType() === Pit::TYPE_PIT) {
                 $this->io->println('I FEEL A DRAFT');
             }
@@ -170,7 +175,7 @@ EOD;
             }
         });
 
-        $theGame->addEventListener(function (YouAreInRoom $event): void {
+        $game->addEventListener(function (YouAreInRoom $event): void {
             $this->io->println("YOU ARE IN ROOM {room}", [
                 'room' => $event->getRoom()
             ]);
@@ -182,23 +187,23 @@ EOD;
             ]);
         });
 
-        $theGame->addEventListener(function (SuperBatSnatch $event): void {
+        $game->addEventListener(function (SuperBatSnatch $event): void {
             $this->io->println('ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!');
         });
 
-        $theGame->addEventListener(function (WumpusGotYou $event): void {
+        $game->addEventListener(function (WumpusGotYou $event): void {
             $this->io->println("TSK TSK TSK- WUMPUS GOT YOU!");
         });
         
-        $theGame->addEventListener(function (OutOfArrows $event): void {
+        $game->addEventListener(function (OutOfArrows $event): void {
             $this->io->println("OUT OF ARROWS.");
         });
 
-        $theGame->addEventListener(function (FellInPit $event): void {
+        $game->addEventListener(function (FellInPit $event): void {
             $this->io->println("YYYIIIIEEEE . . . FELL IN PIT");
         });
 
-        $theGame->addEventListener(function (ArrowHit $arrowHit): void {
+        $game->addEventListener(function (ArrowHit $arrowHit): void {
             $type = $arrowHit->getWorldObject()->getType();
             switch ($type) {
                 case WorldObjectInterface::TYPE_WUMPUS:
@@ -210,15 +215,15 @@ EOD;
             }
         });
 
-        $theGame->addEventListener(function (WumpusWakedUp $event): void {
+        $game->addEventListener(function (WumpusWakedUp $event): void {
             $this->io->println('...OOPS! BUMPED A WUMPUS!');
         });
 
-        $theGame->addEventListener(function (ArrowRandomFlight $event): void {
+        $game->addEventListener(function (ArrowRandomFlight $event): void {
             $this->io->println('NO TUNNEL FOR ARROW. ARROW FLEW GOD KNOWS WHERE!');
         });
 
-        $theGame->addEventListener(function (ArrowMissed $event): void {
+        $game->addEventListener(function (ArrowMissed $event): void {
             $this->io->println('MISSED');
         });
 
@@ -226,7 +231,7 @@ EOD;
 
         sense_room:
 
-        $theGame->sensePlayerRoom($playerId);
+        $game->sensePlayerRoom($playerId);
 
         shoot_or_move:
 
@@ -236,7 +241,7 @@ EOD;
 
         if ($command === 'M') {
             $whereTo = $this->io->input('WHERE TO?');
-            $theGame->move($playerId, $whereTo);
+            $game->move($playerId, $whereTo);
         }
 
         if ($command === 'S') {
@@ -271,7 +276,7 @@ EOD;
                 $arrowTrajectory[] = $room;
             }
 
-            $theGame->shoot($playerId, $arrowTrajectory);
+            $game->shoot($playerId, $arrowTrajectory);
 
             if (!$player->isGameOver()) {
                 goto shoot_or_move;

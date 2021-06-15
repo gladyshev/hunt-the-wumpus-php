@@ -17,30 +17,6 @@ final class World
         $this->worldObjectsMap = $worldObjectsMap;
     }
 
-    public static function create(
-        array $map,
-        array $worldObjects
-    ): self {
-        $worldObjectPlacement = [];
-
-        $freeRooms = array_keys($map);
-
-        foreach ($worldObjects as $entity) {
-            if (empty($freeRooms)) {
-                throw new \RuntimeException('TOO MANY OBJECTS');
-            }
-
-            $random_room_key = array_rand($freeRooms);
-            $random_room = $freeRooms[$random_room_key];
-
-            unset($freeRooms[$random_room_key]);
-
-            $worldObjectPlacement[$random_room] = $entity;
-        }
-
-        return new World($map, $worldObjectPlacement);
-    }
-
     public function addWorldObject(
         int $room,
         WorldObjectInterface $object
@@ -75,6 +51,10 @@ final class World
 
     public function getLeadRooms(int $room): array
     {
+        if (!isset($this->map[$room])) {
+            throw new \RuntimeException('NO ROOM ON MAP');
+        }
+
         return $this->map[$room];
     }
 
