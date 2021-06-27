@@ -2,7 +2,7 @@
 
 return [
     \Htw\TextDelivery\TextDeliveryInterface::class => function (\Psr\Container\ContainerInterface $container) {
-        return $container->get(\Htw\TextDelivery\AnsiConsoleDelivery::class);
+        return $container->get(\Htw\TextDelivery\ConsoleDelivery::class);
     },
 
     \Htw\IO\IOInterface::class => function (\Psr\Container\ContainerInterface $container) {

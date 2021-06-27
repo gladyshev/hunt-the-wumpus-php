@@ -6,11 +6,11 @@
 namespace Htw\TextDelivery;
 
 /**
- * Class AnsiTextTextIO
+ * Class ConsoleDelivery
  *
  * @author Dmitry Gladyshev <gladyshevd@icloud.com>
  */
-class AnsiConsoleDelivery implements TextDeliveryInterface
+class ConsoleDelivery implements TextDeliveryInterface
 {
     public function output(string $message = ''): void
     {

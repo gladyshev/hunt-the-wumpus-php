@@ -8,15 +8,23 @@ namespace Htw\I18N;
 final class I18N implements \Htw\I18N\I18NInterface
 {
     private array $data;
+    private array $fallbackData;
 
     public function __construct(
-        string $translations_path,
-        string $locale
+        string $translationsPath,
+        string $locale,
+        string $fallbackLocale = 'en_US'
     ) {
-        $filename = $translations_path . $locale . '.php';
+        $localeFilename = $translationsPath . $locale . '.php';
 
-        if (file_exists($filename)) {
-            $this->data = require $filename;
+        if (file_exists($localeFilename)) {
+            $this->data = require $localeFilename;
+        }
+
+        $fallbackLocaleFilename = $translationsPath . $fallbackLocale . '.php';
+
+        if (file_exists($fallbackLocaleFilename)) {
+            $this->fallbackData = require $fallbackLocaleFilename;
         }
     }
 
@@ -25,6 +33,11 @@ final class I18N implements \Htw\I18N\I18NInterface
         if (isset($this->data[$id])) {
             return $this->data[$id];
         }
+
+        if (isset($this->fallbackData[$id])) {
+            return $this->fallbackData[$id];
+        }
+
         return $id;
     }
 
@@ -32,10 +45,16 @@ final class I18N implements \Htw\I18N\I18NInterface
     {
         $id = array_search($translation, $this->data);
 
-        if (false === $id) {
-            return $translation;
+        if (false !== $id) {
+            return $this->data[$id];
         }
 
-        return $this->data[$id];
+        $id = array_search($translation, $this->fallbackData);
+
+        if (false !== $id) {
+            return $this->fallbackData[$id];
+        }
+
+        return $translation;
     }
 }

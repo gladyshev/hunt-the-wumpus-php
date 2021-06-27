@@ -7,7 +7,19 @@ namespace Htw\IO;
 
 interface IOInterface
 {
-    public function print(string $message = '', array $placeholders = []): void;
-    public function println(string $message = '', array $placeholders = []): void;
-    public function input(string $prompt = '', string $default = '', array $placeholders = []): string;
+    public function print(
+        string $messageId = '',
+        array $placeholders = []
+    ): void;
+
+    public function println(
+        string $messageId = '',
+        array $placeholders = []
+    ): void;
+
+    public function input(
+        string $promptMessageId = '',
+        string $default = '',
+        array $placeholders = []
+    ): string;
 }

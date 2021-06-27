@@ -27,66 +27,6 @@ use Htw\GameRules\Game;
 
 final class Main
 {
-    private const WELCOME = <<<EOD
-HUNT THE WUMPUS
-EOD;
-
-    private const DISCLAIMER = <<<EOD
-
-ATTENTION ALL WUMPUS LOVERS!!!
-THERE ARE NOW TWO ADDITIONS TO THE WUMPUS FAMILY
-OF PROGRAMS.
-
-    WUMP2:  SOME DIFFERENT CAVE ARRANGEMENTS
-    WUMP3:  DIFFERENT HAZARDS
-
-EOD;
-
-    private const INSTRUCTIONS = <<<EOD
-
-WELCOME TO 'HUNT THE WUMPUS'
-
-THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM
-HAS 3 TUNNELS LEADING TO OTHER ROOMS. (LOOK AT A
-DODECAHEDRON TO SEE HOW THIS WORKS-IF YOU DON'T KNOW
-WHAT A DODECAHEDRON IS, ASK SOMEONE)
-
-    HAZARDS:
-BOTTOMLESS PITS - TWO ROOMS HAVE BOTTOMLESS PITS IN THEM
-    IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)
-SUPER BATS - TWO OTHER ROOMS HAVE SUPER BATS. IF YOU
-    GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER
-    ROOM AT RANDOM. (WHICH MIGHT BE TROUBLESOME)
-
-    WUMPUS:
-THE WUMPUS IS NOT BOTHERED BY THE HAZARDS (HE HAS SUCKER
-FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY
-HE IS ASLEEP. TWO THINGS WAKE HIM UP: YOUR ENTERING
-HIS ROOM OR YOUR SHOOTING AN ARROW.
-    IF THE WUMPUS WAKES, HE MOVES (P=.75) ONE ROOM
-OR STAYS STILL (P=.25). AFTER THAT, IF HE IS WHERE YOU
-ARE, HE EATS YOU UP (& YOU LOSE!)
-
-    YOU:
-EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW
-    MOVING: YOU CAN GO ONE ROOM (THRU ONE TUNNEL)
-    ARROWS: YOU HAVE 5 ARROWS. YOU LOSE WHEN YOU RUN OUT.
-    EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING
-THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.
-    IF THE ARROW CAN'T GO THAT WAY (IE NO TUNNEL) IT MOVES
-AT RANDOM TO THE NEXT ROOM.
-    IF THE ARROW HITS THE WUMPUS, YOU WIN.
-    IF THE ARROW HITS YOU, YOU LOSE.
-
-    WARNINGS:
-    WHEN YOU ARE ONE ROOM AWAY FROM WUMPUS OR HAZARD,
-THE COMPUTER SAYS:
-    WUMPUS  -  'I SMELL A WUMPUS'
-    BAT     -  'BATS NEARBY'
-    PIT     -  'I FEEL A DRAFT'
- 
-EOD;
-
     private ConfigInterface $config;
     private IOInterface $io;
     private HazardFactory $worldObjectFactory;
@@ -113,23 +53,24 @@ EOD;
         int $playerId = 1,
         string $playerName = 'player1'
     ): void {
-        $this->io->println(self::WELCOME);
-        $this->io->println(self::DISCLAIMER);
+        $this->io->println('welcome');
+        $this->io->println('disclaimer');
 
         main_menu:
 
-        $command = strtoupper(trim($this->io->input("ENTER TO START NEW GAME, 'I' TO INSTRUCTIONS, 'Q' TO QUIT ")));
+        $command = strtoupper(trim($this->io->input('cli.welcome')));
 
         if ($command === 'I') {
-            $this->io->println(self::INSTRUCTIONS);
+            $this->io->println('instructions');
+            goto main_menu;
         }
 
         if ($command === 'Q') {
-            $this->io->println('BYE-BYE');
+            $this->io->println('exit');
             return;
         }
 
-        $this->io->println('HUNT THE WUMPUS');
+        $this->io->println('start-game');
         $this->io->println();
 
 
@@ -158,29 +99,29 @@ EOD;
         $game = new Game($world);
 
         $game->addEventListener(function (InvalidMove $event): void {
-            $this->io->println('INVALID ROOM');
+            $this->io->println('invalid-move-room');
         });
 
         $game->addEventListener(function (LeadRoomHazard $event): void {
             if ($event->getHazard()->getType() === Pit::TYPE_PIT) {
-                $this->io->println('I FEEL A DRAFT');
+                $this->io->println('feel-draft');
             }
 
             if ($event->getHazard()->getType() === Pit::TYPE_BAT) {
-                $this->io->println('BATS NEARBY!');
+                $this->io->println('feel-bats');
             }
 
             if ($event->getHazard()->getType() === Pit::TYPE_WUMPUS) {
-                $this->io->println('I SMELL A WUMPUS!');
+                $this->io->println('feel-wumpus');
             }
         });
 
         $game->addEventListener(function (YouAreInRoom $event): void {
-            $this->io->println("YOU ARE IN ROOM {room}", [
+            $this->io->println("you-room", [
                 'room' => $event->getRoom()
             ]);
 
-            $this->io->println('TUNNELS LEADS TO {room1} {room2} {room3}', [
+            $this->io->println('you-room-tunnels', [
                 'room1' => $event->getLeadRooms()[0],
                 'room2' => $event->getLeadRooms()[1],
                 'room3' => $event->getLeadRooms()[2],
@@ -188,11 +129,11 @@ EOD;
         });
 
         $game->addEventListener(function (SuperBatSnatch $event): void {
-            $this->io->println('ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!');
+            $this->io->println('super-bat-snatch');
         });
 
         $game->addEventListener(function (WumpusGotYou $event): void {
-            $this->io->println("TSK TSK TSK- WUMPUS GOT YOU!");
+            $this->io->println("wumpus-got-you");
         });
         
         $game->addEventListener(function (OutOfArrows $event): void {
@@ -200,27 +141,27 @@ EOD;
         });
 
         $game->addEventListener(function (FellInPit $event): void {
-            $this->io->println("YYYIIIIEEEE . . . FELL IN PIT");
+            $this->io->println("fell-in-pit");
         });
 
         $game->addEventListener(function (ArrowHit $arrowHit): void {
             $type = $arrowHit->getWorldObject()->getType();
             switch ($type) {
                 case WorldObjectInterface::TYPE_WUMPUS:
-                    $this->io->println('AHA! YOU GOT THE WUMPUS!');
+                    $this->io->println('you-got-wumpus');
                     break;
 
                 case WorldObjectInterface::TYPE_PLAYER:
-                    $this->io->println('OUCH! ARROW GOT YOU!');
+                    $this->io->println('arrow-got-you');
             }
         });
 
         $game->addEventListener(function (WumpusWakedUp $event): void {
-            $this->io->println('...OOPS! BUMPED A WUMPUS!');
+            $this->io->println('wumpus-waked-up');
         });
 
         $game->addEventListener(function (ArrowRandomFlight $event): void {
-            $this->io->println('NO TUNNEL FOR ARROW. ARROW FLEW GOD KNOWS WHERE!');
+            $this->io->println('random-arrow-flight');
         });
 
         $game->addEventListener(function (ArrowMissed $event): void {
@@ -237,18 +178,22 @@ EOD;
 
         $this->io->println();
 
-        $command = strtoupper(trim($this->io->input('SHOOT OR MOVE (S-M)')));
+        $command = strtoupper(trim($this->io->input('input-shoot-or-move')));
 
         if ($command === 'M') {
-            $whereTo = $this->io->input('WHERE TO?');
+            $whereTo = $this->io->input('input-where-to');
             $game->move($playerId, $whereTo);
         }
 
         if ($command === 'S') {
             arrow_energy:
-            $arrowEnergy = $this->io->input('NO. OF ROOMS (1-{max_arrow_energy})', '', [
-                'max_arrow_energy' => $this->config->getParam('arrow_max_energy')
-            ]);
+            $arrowEnergy = $this->io->input(
+                'input-no-of-rooms',
+                '',
+                [
+                    'max_arrow_energy' => $this->config->getParam('arrow_max_energy')
+                ]
+            );
 
             if (
                 $arrowEnergy < 1
@@ -260,17 +205,17 @@ EOD;
             $arrowTrajectory = [];
             for ($i = 0; $i < $arrowEnergy; $i++) {
                 arrow_trajectory:
-                $room = $this->io->input('ROOM #');
+                $room = $this->io->input('input-room');
                 if (
                     $i > 1
                     && $room == $arrowTrajectory[$i - 2]
                 ) {
-                    $this->io->println('ARROWS AREN\'T THAT CROOKED - TRY ANOTHER ROOM');
+                    $this->io->println('invalid-arrow-trajectory');
                     goto arrow_trajectory;
                 }
 
                 if (!$world->existRoom($room)) {
-                    $this->io->println('ONLY 1-{max_rooms}', ['max_rooms' => $world->getNumRooms()]);
+                    $this->io->println('invalid-shoot-room', ['max_rooms' => $world->getNumRooms()]);
                     goto arrow_trajectory;
                 }
                 $arrowTrajectory[] = $room;
@@ -288,9 +233,9 @@ EOD;
         }
 
         if ($player->isGotWumpus()) {
-            $this->io->println('HEE HEE HEE - THE WUMPUS\'LL GETCHA NEXT TIME!!');
+            $this->io->println('win-game-over');
         } else {
-            $this->io->println('HA HA HA - YOU LOSE!');
+            $this->io->println('loose-game-over');
         }
 
         goto main_menu;

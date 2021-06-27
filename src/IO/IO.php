@@ -21,25 +21,23 @@ final class IO implements \Htw\IO\IOInterface
         $this->translator = $translator;
     }
 
-    public function print(string $message = '', array $placeholders = []): void
+    public function print(string $messageId = '', array $placeholders = []): void
     {
-        // ToDo: translate
-
         $this->textDelivery->output(
-            $this->compileMessage($message, $placeholders)
+            $this->compileMessage($messageId, $placeholders)
         );
     }
 
-    public function println(string $message = '', array $placeholders = []): void
+    public function println(string $messageId = '', array $placeholders = []): void
     {
-        $this->textDelivery->output($this->compileMessage($message, $placeholders) . PHP_EOL);
+        $this->textDelivery->output($this->compileMessage($messageId, $placeholders) . PHP_EOL);
     }
 
-    public function input(string $prompt = '', string $default = '', array $placeholders = []): string
+    public function input(string $promptMessageId = '', string $default = '', array $placeholders = []): string
     {
-        $prompt = $this->compileMessage($prompt, $placeholders);
+        $promptMessageId = $this->compileMessage($promptMessageId, $placeholders);
 
-        $this->textDelivery->output($prompt);
+        $this->textDelivery->output($promptMessageId);
 
         $value = $this->textDelivery->input();
 
@@ -51,7 +49,7 @@ final class IO implements \Htw\IO\IOInterface
         $message = $this->translator->translate($message);
 
         foreach ($placeholders as $placeholder => $value) {
-
+            $value = $this->translator->translate($value);
             $message = str_replace('{' . $placeholder . '}', $value, $message);
         }
 
