@@ -86,5 +86,6 @@ EOD,
     'invalid-arrow-trajectory' => 'ARROWS AREN\'T THAT CROOKED - TRY ANOTHER ROOM',
     'invalid-shoot-room' => 'ONLY 1-{max_rooms}',
     'win-game-over' => 'HEE HEE HEE - THE WUMPUS\'LL GETCHA NEXT TIME!!',
-    'loose-game-over' => 'HA HA HA - YOU LOSE!'
+    'loose-game-over' => 'HA HA HA - YOU LOSE!',
+    'out-of-arrows' => 'OUT OF ARROWS.'
 ];

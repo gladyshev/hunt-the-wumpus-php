@@ -5,13 +5,16 @@
 
 namespace Htw\GameRules;
 
-use Htw\GameRules\Events\ArrowHit;
+use Htw\GameRules\Events\ArrowHitPlayer;
 use Htw\GameRules\Events\ArrowMissed;
 use Htw\GameRules\Events\ArrowRandomFlight;
 use Htw\GameRules\Events\FellInPit;
 use Htw\GameRules\Events\InvalidMove;
-use Htw\GameRules\Events\LeadRoomHazard;
+use Htw\GameRules\Events\LeadRoomBat;
+use Htw\GameRules\Events\LeadRoomPit;
+use Htw\GameRules\Events\LeadRoomWumpus;
 use Htw\GameRules\Events\OutOfArrows;
+use Htw\GameRules\Events\PlayerGotWumpus;
 use Htw\GameRules\Events\SuperBatSnatch;
 use Htw\GameRules\Events\WumpusGotYou;
 use Htw\GameRules\Events\WumpusWakedUp;
@@ -41,7 +44,19 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
         foreach ($leadRooms as $leadRoom) {
             $leadRoomHazard = $this->world->getRoomObject($leadRoom);
             if ($leadRoomHazard) {
-                $this->dispatch(new LeadRoomHazard($playerId, $leadRoomHazard));
+                switch ($leadRoomHazard->getType()) {
+                    case WorldObjectInterface::TYPE_PIT:
+                        $this->dispatch(new LeadRoomPit($playerId));
+                        break;
+
+                    case WorldObjectInterface::TYPE_BAT:
+                        $this->dispatch(new LeadRoomBat($playerId));
+                        break;
+
+                    case WorldObjectInterface::TYPE_WUMPUS:
+                        $this->dispatch(new LeadRoomWumpus($playerId));
+                        break;
+                }
             }
         }
 
@@ -107,8 +122,7 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
 
             $actualArrowRoom = $randomArrowFlight
                 ? $this->world->getRandomLeadRoom($prevRoom)
-                : $arrowRoom
-            ;
+                : $arrowRoom;
 
             $prevRoom = $actualArrowRoom;
 
@@ -142,11 +156,17 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
 
             if ($roomObject instanceof ArrowHittableWorldObjectInterface) {
                 $roomObject->hit();
-                $this->dispatch(new ArrowHit($playerId, $roomObject));
+
                 if ($roomObject->getType() === WorldObjectInterface::TYPE_WUMPUS) {
                     $player->gotWumpus();
                     $this->world->cleanRoom($arrowRoom);
+                    $this->dispatch(new PlayerGotWumpus($playerId));
                 }
+
+                if ($roomObject->getType() === WorldObjectInterface::TYPE_PLAYER) {
+                    $this->dispatch(new ArrowHitPlayer($playerId));
+                }
+
                 return;
             }
         }
@@ -171,6 +191,26 @@ final class Game implements EventDispatcherInterface, ListenerProviderInterface
                 $this->dispatch(new WumpusGotYou($playerId));
             }
         }
+    }
+
+    public function existRoom(int $room): bool
+    {
+        return $this->world->existRoom($room);
+    }
+
+    public function getNumRooms(): int
+    {
+        return $this->world->getNumRooms();
+    }
+
+    public function isPlayerGameOver(string $playerId): bool
+    {
+        return $this->world->getPlayer($playerId)->isGameOver();
+    }
+
+    public function isPlayerGotWumpus(string $playerId): bool
+    {
+        return $this->world->getPlayer($playerId)->isGotWumpus();
     }
 
     /**
