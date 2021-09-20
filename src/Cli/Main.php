@@ -10,13 +10,18 @@ use Htw\Config\ConfigInterface;
 
 final class Main
 {
+    private const COMMAND_QUIT          = 'Q';
+    private const COMMAND_INSTRUCTIONS  = 'I';
+    private const COMMAND_SHOOT         = 'S';
+    private const COMMAND_MOVE          = 'M';
+
     private ConfigInterface $config;
     private IOInterface $io;
     private GameFactory $gameFactory;
 
     public function __construct(
-        IOInterface $io,
         ConfigInterface $config,
+        IOInterface $io,
         GameFactory $gameFactory
     ) {
         $this->io = $io;
@@ -24,33 +29,31 @@ final class Main
         $this->gameFactory = $gameFactory;
     }
 
-    /**
-     * @param int $playerId
-     * @param string $playerName
-     * @throws \ReflectionException
-     */
-    public function start(
-        int $playerId = 1,
-        string $playerName = 'player1'
-    ): void {
+    public function start(int $playerId, string $playerName): void
+    {
         $this->io->println('welcome');
         $this->io->println('disclaimer');
 
         main_menu:
 
-        $command = strtoupper(trim($this->io->input('cli.welcome')));
+        $command = $this->io->inputln('cli.welcome');
 
-        if ($command === 'I') {
+        if ($command === self::COMMAND_INSTRUCTIONS) {
             $this->io->println('instructions');
             goto main_menu;
         }
 
-        if ($command === 'Q') {
+        if ($command === self::COMMAND_QUIT) {
             $this->io->println('exit');
             return;
         }
 
         $this->io->println('start-game');
+
+        /* Main loop */
+
+        sense_room:
+
         $this->io->println();
 
         $game = $this->gameFactory->createGame(
@@ -59,26 +62,20 @@ final class Main
             $this->io
         );
 
-        /* Main loop */
-
-        sense_room:
-
         $game->sensePlayerRoom($playerId);
 
         shoot_or_move:
 
-        $this->io->println();
+        $command = $this->io->inputln('input-shoot-or-move');
 
-        $command = strtoupper(trim($this->io->input('input-shoot-or-move')));
-
-        if ($command === 'M') {
-            $whereTo = $this->io->input('input-where-to');
+        if ($command === self::COMMAND_MOVE) {
+            $whereTo = $this->io->inputln('input-where-to');
             $game->move($playerId, $whereTo);
         }
 
-        if ($command === 'S') {
+        if ($command === self::COMMAND_SHOOT) {
             arrow_energy:
-            $arrowEnergy = $this->io->input(
+            $arrowEnergy = $this->io->inputln(
                 'input-no-of-rooms',
                 '',
                 [
@@ -96,7 +93,7 @@ final class Main
             $arrowTrajectory = [];
             for ($i = 0; $i < $arrowEnergy; $i++) {
                 arrow_trajectory:
-                $room = $this->io->input('input-room');
+                $room = $this->io->inputln('input-room');
                 if (
                     $i > 1
                     && $room == $arrowTrajectory[$i - 2]

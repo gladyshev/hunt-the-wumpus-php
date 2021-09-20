@@ -14,7 +14,7 @@ $ cd ~/games
 $ git clone https://github.com/gladyshev/hunt-the-wumpus-php.git htw
 $ cd htw 
 $ composer install
-$ ./bin/game
+$ ./bin/htw
 ```
 
 # Gameplay

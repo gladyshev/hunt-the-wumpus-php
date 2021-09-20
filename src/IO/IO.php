@@ -33,13 +33,15 @@ final class IO implements \Htw\IO\IOInterface
         $this->textDelivery->output($this->compileMessage($messageId, $placeholders) . PHP_EOL);
     }
 
-    public function input(string $promptMessageId = '', string $default = '', array $placeholders = []): string
+    public function inputln(string $promptMessageId = '', string $default = '', array $placeholders = []): string
     {
         $promptMessageId = $this->compileMessage($promptMessageId, $placeholders);
 
         $this->textDelivery->output($promptMessageId);
 
         $value = $this->textDelivery->input();
+
+        $value = strtoupper(trim($value));
 
         return $this->translator->findId($value);
     }

@@ -7,13 +7,11 @@ chdir(__DIR__ . '/..');
 $container = require 'bootstrap/container.php';
 
 try {
-    $game = $container->get(\Htw\Cli\Main::class);
-    $game->start();
+    $main = $container->get(\Htw\Cli\Main::class);
+    $main->start(1, 'Hunter');
 } catch (\Throwable $e) {
     fwrite(\STDERR, (string) $e);
     return 0;
 }
 
 return 0;
-
-

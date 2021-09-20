@@ -17,7 +17,7 @@ interface IOInterface
         array $placeholders = []
     ): void;
 
-    public function input(
+    public function inputln(
         string $promptMessageId = '',
         string $default = '',
         array $placeholders = []
