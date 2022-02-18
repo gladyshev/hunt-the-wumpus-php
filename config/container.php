@@ -7,5 +7,5 @@ file_exists(__DIR__.'/../.env') && \Dotenv\Dotenv::createImmutable(__DIR__.'/../
 
 return (new \DI\ContainerBuilder())
     ->useAutowiring(true)
-    ->addDefinitions(require __DIR__ . '/../config/di.php')
+    ->addDefinitions(require __DIR__ . '/dependencies.php')
     ->build();

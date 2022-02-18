@@ -4,7 +4,7 @@
 chdir(__DIR__ . '/..');
 
 /** @var \Psr\Container\ContainerInterface $container */
-$container = require 'bootstrap/container.php';
+$container = require 'config/container.php';
 
 try {
     $main = $container->get(\Htw\Cli\Main::class);

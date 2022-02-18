@@ -5,7 +5,6 @@
 
 namespace Htw\Tests\GameRules;
 
-use http\Exception\RuntimeException;
 use Htw\GameRules\World;
 use Htw\GameRules\WorldObjectInterface;
 use Htw\GameRules\WorldObjects\Bat;
@@ -73,31 +72,6 @@ class WorldTest extends TestCase
         $this->assertEquals(4, $this->world->getRoomObject(10)->getId());
     }
 
-    public function testAddWorldObject()
-    {
-
-    }
-
-    public function testGetNumRooms()
-    {
-
-    }
-
-    public function testCleanRoom()
-    {
-
-    }
-
-    public function testExistRoom()
-    {
-
-    }
-
-    public function testGetRandomFreeRoom()
-    {
-
-    }
-
     /**
      * @covers ::getPlayer
      */
@@ -121,11 +95,6 @@ class WorldTest extends TestCase
 
         $emptyObject = $this->world->getRoomObject(19);
         $this->assertNull($emptyObject);
-    }
-
-    public function testExistTunnel()
-    {
-
     }
 
     public function testGetLeadRooms()
