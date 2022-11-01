@@ -4,7 +4,7 @@
     <br>
 </p>
 
-Another yet implementation a classic text-based adventure game "[Hunt the Wumpus](https://en.wikipedia.org/wiki/Hunt_the_Wumpus)" developed by Gregory Yob back in 1973.
+Another yet implementation a classic text-based adventure game "[Hunt the Wumpus](https://en.wikipedia.org/wiki/Hunt_the_Wumpus)" developed by Gregory Yob back in 1973. Inspired by reading Robert Martin's Clean Architecture.
 
 # How to Run
 
